@@ -1,6 +1,6 @@
 import React from "react";
 import { KeyPayload, Lang } from "shared/types";
-import { DEFAULT_KEY_PAYLOAD } from "shared/constants";
+import { DEFAULT_KEYSET_KEY_PAYLOAD } from "shared/constants";
 import { useOutsideClick } from "client/hooks/useOutsideClick";
 import { TableRow } from "./TableRow";
 import { StyledTable } from "./StyledTable";
@@ -58,7 +58,7 @@ export const KeysetTable: React.FC<KeysetTableProps> = ({
             isNew
             focus
             setFocus={toggleAddKey}
-            keyPayload={DEFAULT_KEY_PAYLOAD}
+            keyPayload={DEFAULT_KEYSET_KEY_PAYLOAD}
           />
         )}
         {data.map((item, i) => (

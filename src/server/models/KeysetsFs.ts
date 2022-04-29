@@ -2,7 +2,7 @@ import fs from "fs";
 import { promisify } from "util";
 import path from "path";
 import rimraf from "rimraf";
-import { allowedStatuses, AllowedStatuses } from "shared/constants";
+import { DEFAULT_KEYSET } from "shared/constants";
 import { KeysetType, Lang, LangFiles, KeysetsService } from "shared/types";
 import { ValidationError } from "server/errors/ValidationError";
 
@@ -24,18 +24,7 @@ export class KeysetsFs implements KeysetsService {
   };
 
   create = async (name: string) => {
-    const res = await this.update(name, {
-      context: {},
-      keyset: {
-        context: "",
-        status: {},
-        allowedStatuses,
-      },
-      ...Object.keys(Lang).reduce((acc, lang) => {
-        acc[lang] = {};
-        return acc;
-      }, {} as LangFiles),
-    });
+    const res = await this.update(name, DEFAULT_KEYSET);
 
     await this._syncDirNames();
 

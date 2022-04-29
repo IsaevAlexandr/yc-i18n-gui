@@ -1,4 +1,4 @@
-import { KeyPayload } from "../types";
+import { KeyPayload, KeysetType, Lang, LangFiles, LangPayload } from "../types";
 
 export enum AllowedStatuses {
   APPROVED = "APPROVED",
@@ -18,15 +18,28 @@ export const allowedStatuses = [
 
 export const KEYSETS_PATH = "keysets";
 
-export const DEFAULT_KEY_PAYLOAD: KeyPayload = {
+export const DEFAULT_KEYSET_KEY_PAYLOAD: KeyPayload = {
   context: "",
-  ru: {
-    value: "",
-    allowedStatus: AllowedStatuses.REQUIRES_TRANSLATION,
-  },
-  en: {
-    value: "",
-    allowedStatus: AllowedStatuses.REQUIRES_TRANSLATION,
-  },
   name: "",
+  ...Object.keys(Lang).reduce((acc, lang) => {
+    acc[lang] = {
+      value: "",
+      allowedStatus: AllowedStatuses.REQUIRES_TRANSLATION,
+    };
+
+    return acc;
+  }, {} as Record<Lang, LangPayload>),
+};
+
+export const DEFAULT_KEYSET: KeysetType = {
+  context: {},
+  keyset: {
+    context: "",
+    status: {},
+    allowedStatuses,
+  },
+  ...Object.keys(Lang).reduce((acc, lang) => {
+    acc[lang] = {};
+    return acc;
+  }, {} as LangFiles),
 };

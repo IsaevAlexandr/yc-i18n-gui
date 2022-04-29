@@ -4,6 +4,7 @@ import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
 interface KeysetItemType {
   inputValue: string;
   title: string;
+  fromInput?: boolean;
 }
 
 const filter = createFilterOptions<KeysetItemType>();
@@ -29,9 +30,7 @@ export const KeysetAutocomplete: React.FC<KeysetAutocompleteProps> = ({
           onUpdate(newValue, true);
         } else if (newValue && newValue.inputValue) {
           // Create a new value from the user input
-          onUpdate(newValue.inputValue, true);
-        } else {
-          onUpdate(newValue.inputValue, false);
+          onUpdate(newValue.inputValue, newValue.fromInput);
         }
       }}
       placeholder="Select keyset"
@@ -45,6 +44,7 @@ export const KeysetAutocomplete: React.FC<KeysetAutocompleteProps> = ({
         );
         if (inputValue !== "" && !isExisting) {
           filtered.push({
+            fromInput: true,
             inputValue,
             title: `Add "${inputValue}"`,
           });
