@@ -4,6 +4,9 @@ import { Autocomplete, TextField, createFilterOptions } from "@mui/material";
 interface KeysetItemType {
   inputValue: string;
   title: string;
+  /**
+   * if the option is added from suggest
+   */
   fromInput?: boolean;
 }
 
@@ -13,27 +16,31 @@ interface KeysetAutocompleteProps {
   onUpdate(value: string, isNew: boolean): void;
   value: string;
   options: KeysetItemType[];
+  onReset?(): void;
 }
 
 export const KeysetAutocomplete: React.FC<KeysetAutocompleteProps> = ({
   onUpdate,
   value,
   options,
+  onReset,
 }) => {
   return (
     <Autocomplete
       size="medium"
       value={value}
-      onChange={(_e, newValue) => {
+      onChange={(_e, newValue, reason) => {
+        if (reason === "clear") {
+          onReset();
+        }
         // Enter was pressed
-        if (typeof newValue === "string") {
+        else if (typeof newValue === "string") {
           onUpdate(newValue, true);
         } else if (newValue && newValue.inputValue) {
           // Create a new value from the user input
           onUpdate(newValue.inputValue, newValue.fromInput);
         }
       }}
-      placeholder="Select keyset"
       filterOptions={(options, params) => {
         const filtered = filter(options, params);
 
@@ -71,7 +78,12 @@ export const KeysetAutocomplete: React.FC<KeysetAutocompleteProps> = ({
       renderOption={(props, option) => <li {...props}>{option.title}</li>}
       sx={{ width: 300 }}
       freeSolo
-      renderInput={(params) => <TextField {...params} label="Keyset" />}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label={options.length ? "Select keyset" : "Start type to add keyset"}
+        />
+      )}
     />
   );
 };

@@ -1,0 +1,20 @@
+{
+    "context": "",
+    "status": {
+        "label_name": {
+            "ru": "REQUIRES_TRANSLATION",
+            "en": "REQUIRES_TRANSLATION"
+        },
+        "label_description": {
+            "ru": "REQUIRES_TRANSLATION",
+            "en": "REQUIRES_TRANSLATION"
+        }
+    },
+    "allowedStatuses": [
+        "APPROVED",
+        "EXPIRED",
+        "GENERATED",
+        "REQUIRES_TRANSLATION",
+        "TRANSLATED"
+    ]
+}

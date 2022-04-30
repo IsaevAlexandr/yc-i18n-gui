@@ -1,15 +1,6 @@
 import { KEYSETS_PATH } from "shared/constants";
-import { DeleteKeyDTO, KeyPayload, KeysetType } from "shared/types";
-
-const handleRequest = <T>(request: Promise<Response>): Promise<T> => {
-  return request.then(async (res) => {
-    const data = await res.json();
-
-    if (res.ok) return data;
-
-    throw data;
-  });
-};
+import { KeyPayload, KeysetType } from "shared/types";
+import { handleRequest } from "./utils";
 
 export const getKeysetsList = (): Promise<string[]> => {
   return handleRequest(fetch(`/api/${KEYSETS_PATH}`, { method: "GET" }));
@@ -32,23 +23,28 @@ export const deleteKeyset = (name: string): Promise<KeysetType> => {
   );
 };
 
+export interface KeyEditPayload {
+  name: string;
+  keyData: KeyPayload;
+}
+
 export const editKey =
   (keyset: string) =>
-  (payload: KeyPayload): Promise<KeysetType> => {
+  ({ name, keyData }: KeyEditPayload): Promise<KeysetType> => {
     return handleRequest(
-      fetch(`/api/${KEYSETS_PATH}/${keyset}/${payload.name}`, {
+      fetch(`/api/${KEYSETS_PATH}/${keyset}/${name}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(keyData),
       })
     );
   };
 
 export const deleteKey =
   (keyset: string) =>
-  (payload: DeleteKeyDTO): Promise<KeysetType> => {
+  (payload: { name: string }): Promise<KeysetType> => {
     return handleRequest(
       fetch(`/api/${KEYSETS_PATH}/${keyset}/${payload.name}`, {
         method: "DELETE",

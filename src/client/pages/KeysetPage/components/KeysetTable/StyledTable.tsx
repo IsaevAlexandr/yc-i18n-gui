@@ -7,7 +7,6 @@ export const StyledTable = styled.table`
 
   th {
     color: gray;
-    border-bottom: 1px solid lightgray;
   }
 
   th,
@@ -16,15 +15,18 @@ export const StyledTable = styled.table`
     word-break: break-word;
     min-width: 300px;
     padding: 0.25rem 0.5rem;
-
     user-select: text;
 
-    &:first-child {
+    :first-of-type {
       padding-left: 0rem;
     }
 
-    &:last-child {
+    &:last-of-type {
       padding-right: 0rem;
     }
+  }
+
+  td {
+    border-top: 1px solid lightgray;
   }
 `;

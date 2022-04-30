@@ -6,6 +6,7 @@ import { adapter } from "./utils";
 export const useKeysetPage = () => {
   const history = useHistory();
   const params = useParams<{ keyset: string }>();
+
   const keysetsResolver = useQuery([keysetApi.getKeysetsList.name], () =>
     keysetApi.getKeysetsList()
   );
@@ -14,7 +15,11 @@ export const useKeysetPage = () => {
     () => keysetApi.getKeyset(params.keyset),
     {
       enabled: Boolean(params.keyset),
-      select: adapter,
+      select: (data) => ({
+        data: adapter(data),
+        context: data.keyset.context,
+        allowedStatuses: data.keyset.allowedStatuses,
+      }),
       onError: (e) => {
         history.push("/");
       },
@@ -50,7 +55,7 @@ export const useKeysetPage = () => {
     history,
     selectedKeyset: params.keyset,
     keysets: keysetsResolver.data || [],
-    keyset: keysetResolver.data || [],
+    keyset: keysetResolver.data,
     createKeyset: createKeysetMutation.mutateAsync,
     deleteKeyset: deleteKeysetMutation.mutateAsync,
     editKey: editKeyMutation.mutateAsync,

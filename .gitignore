@@ -4,7 +4,7 @@ npm-debug.log*
 .DS_Store
 .vscode
 
-src/keysets
+src/i18n-keysets
 coverage
 node_modules
 build

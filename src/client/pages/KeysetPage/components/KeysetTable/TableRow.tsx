@@ -1,71 +1,155 @@
 import React from "react";
 import { Form } from "react-final-form";
 import styled from "@emotion/styled";
-import { Button, MenuItem, Stack } from "@mui/material";
+import {
+  Button,
+  FormControlLabel,
+  MenuItem,
+  Stack,
+  Switch,
+} from "@mui/material";
+import { FieldArray } from "react-final-form-arrays";
+import arrayMutators from "final-form-arrays";
 import { TextInputField } from "client/components/Form/TextInputField";
 import { SelectField } from "client/components/Form/SelectField";
-import { KeyPayload } from "shared/types";
-import { allowedStatuses } from "shared/constants";
-
-// TODO: you need to get this information from each keyset file
-const statusSelectItems = allowedStatuses.map((status) => ({
-  title: status,
-  value: status,
-}));
-
-const StyledStack = styled(Stack)<{ focus: boolean }>`
-  visibility: ${({ focus }) => (focus ? "visible" : "hidden")};
-`;
+import { KeyPayload, Lang, LangPayload } from "shared/types";
+import { AllowedStatuses } from "shared/constants";
 
 interface TableRowProps {
-  focus: boolean;
-  setFocus(v: boolean): void;
-  isNew?: boolean;
+  active: boolean;
   keyPayload: KeyPayload;
-  onKeyEdit(p: KeyPayload): void;
-  onKeyCreate(p: KeyPayload): void;
-  onKeyDelete(p: { name: string }): void;
+  allowedStatuses: AllowedStatuses[];
+  showStatus: boolean;
+  toggleActive(v: boolean): void;
+  onKeySave(p: KeyPayload): void;
+  onKeyDelete?(p: { name: string }): void;
 }
 
+const CollapsedRow = styled.tr<{ active: boolean }>(({ active }) => ({
+  display: "block",
+  transition: "height .3s",
+  height: active ? 54 : 0,
+  overflow: "hidden",
+}));
+
 export const TableRow: React.FC<TableRowProps> = ({
-  focus,
-  setFocus,
-  isNew,
-  onKeyEdit,
-  onKeyCreate,
-  onKeyDelete,
+  active,
+  allowedStatuses,
   keyPayload,
+  showStatus,
+  toggleActive,
+  onKeySave,
+  onKeyDelete,
 }) => {
   const { name, context, ...langs } = keyPayload;
+  const langsEntries = Object.entries(langs as Record<Lang, LangPayload>);
+  const [isPlural, setPlural] = React.useState(
+    Array.isArray(langsEntries?.[0]?.[1]?.value)
+  );
 
   const handleSubmit = async (values: KeyPayload) => {
-    if (isNew) {
-      return onKeyCreate(values);
-    } else {
-      return onKeyEdit(values);
-    }
-  };
-
-  const handleDelete = async () => {
-    await onKeyDelete({
-      name: keyPayload.name,
-    });
-    setFocus(false);
+    onKeySave(values);
+    toggleActive(false);
   };
 
   return (
-    <Form<KeyPayload> onSubmit={handleSubmit} initialValues={keyPayload}>
-      {(formProps) => (
-        <tr onClick={isNew ? undefined : () => setFocus(true)}>
-          <td>
-            <Stack spacing={2}>
-              <TextInputField
-                autoComplete="off"
-                name="name"
-                disabled={!focus}
-              />
-              <StyledStack
-                focus={focus}
+    <Form<KeyPayload>
+      mutators={{
+        ...arrayMutators,
+      }}
+      onSubmit={handleSubmit}
+      initialValues={keyPayload}
+    >
+      {(formProps) => {
+        const formApi = formProps.form;
+
+        const changePlural = (v: boolean) => {
+          formApi.batch(() => {
+            if (v) {
+              langsEntries.forEach(([lang, v]) => {
+                formApi.change(lang as Lang, {
+                  ...v,
+                  value: [formProps.values[lang].value || "", "", "", "", ""],
+                });
+              });
+            } else {
+              langsEntries.forEach(([lang, v]) => {
+                formApi.change(lang as Lang, {
+                  ...v,
+                  value: formProps.values[lang].value?.[0] || "",
+                });
+              });
+            }
+          });
+          setPlural(v);
+        };
+
+        return (
+          <>
+            <tr onClick={() => toggleActive(true)}>
+              <td>
+                <TextInputField
+                  fullWidth
+                  autoComplete="off"
+                  name="name"
+                  disabled={!active}
+                />
+              </td>
+
+              {langsEntries.map(([lang, v], i) => (
+                <td key={i}>
+                  <Stack spacing={2}>
+                    {isPlural ? (
+                      <FieldArray name={`${lang}.value`}>
+                        {({ fields }) =>
+                          fields.map((name, i) => (
+                            <TextInputField
+                              key={i}
+                              fullWidth
+                              disabled={!active}
+                              name={name}
+                              multiline
+                            />
+                          ))
+                        }
+                      </FieldArray>
+                    ) : (
+                      <TextInputField
+                        fullWidth
+                        disabled={!active}
+                        name={`${lang}.value`}
+                        multiline
+                      />
+                    )}
+                    {showStatus && (
+                      <SelectField
+                        variant="standard"
+                        fullWidth
+                        size="small"
+                        disabled={!active}
+                        name={`${lang}.allowedStatus`}
+                        label="Status"
+                      >
+                        {allowedStatuses.map((item) => (
+                          <MenuItem value={item}>{item}</MenuItem>
+                        ))}
+                      </SelectField>
+                    )}
+                  </Stack>
+                </td>
+              ))}
+              <td>
+                <TextInputField
+                  fullWidth
+                  disabled={!active}
+                  name="context"
+                  multiline
+                />
+              </td>
+            </tr>
+            <CollapsedRow active={active}>
+              <Stack
+                sx={{ p: [2, 1] }}
                 direction="row"
                 spacing={2}
                 justifyContent="center"
@@ -75,52 +159,41 @@ export const TableRow: React.FC<TableRowProps> = ({
                   type="submit"
                   onClick={async () => {
                     await formProps.handleSubmit();
-                    setFocus(false);
+                    toggleActive(false);
                   }}
                 >
-                  Submit
+                  Save
                 </Button>
-                <Button color="error" onClick={handleDelete}>
-                  Delete
-                </Button>
-              </StyledStack>
-            </Stack>
-          </td>
+                {onKeyDelete && (
+                  <Button
+                    color="error"
+                    onClick={async () => {
+                      await onKeyDelete({
+                        name: keyPayload.name,
+                      });
+                      toggleActive(false);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
 
-          {Object.entries(langs).map(([lang, v], i) => (
-            <td key={i}>
-              <Stack spacing={2}>
-                <TextInputField
-                  fullWidth
-                  disabled={!focus}
-                  name={`${lang}.value`}
-                  multiline
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={isPlural}
+                      onChange={(e, nextValue) => {
+                        changePlural(nextValue);
+                      }}
+                    />
+                  }
+                  label="Pluralize"
                 />
-                <SelectField
-                  variant="standard"
-                  fullWidth
-                  size="small"
-                  disabled={!focus}
-                  name={`${lang}.allowedStatus`}
-                  label="Status"
-                >
-                  {statusSelectItems.map((item) => (
-                    <MenuItem value={item.value}>{item.title}</MenuItem>
-                  ))}
-                </SelectField>
               </Stack>
-            </td>
-          ))}
-          <td>
-            <TextInputField
-              fullWidth
-              disabled={!focus}
-              name="context"
-              multiline
-            />
-          </td>
-        </tr>
-      )}
+            </CollapsedRow>
+          </>
+        );
+      }}
     </Form>
   );
 };

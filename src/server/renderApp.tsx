@@ -53,7 +53,8 @@ export const renderApp = (req: express.Request, res: express.Response) => {
     <head>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta charSet='utf-8' />
-        <title>Welcome to Razzle</title>
+        <title>yc-i18n-gui</title>
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         ${cssLinksFromAssets(assets, 'client')}
     </head>

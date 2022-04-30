@@ -1,7 +1,5 @@
 import express, { Request } from "express";
-import { Keyset } from "server/models/Keyset";
-
-import { KeyPayload, KeysetsService } from "shared/types";
+import { KeyPayload, KeysetPayload, KeysetsService } from "shared/types";
 
 interface KeysetsControllerProps {
   keysets: KeysetsService;
@@ -33,11 +31,17 @@ export const keysetsController = ({
   // edit keyset name
   router.put(
     `/${path}/:keyset`,
-    async (req: Request<{ keyset: string }, {}, { newName: string }>, res) => {
+    async (req: Request<{ keyset: string }, {}, KeysetPayload>, res) => {
       const { keyset } = req.params;
-      const { newName } = req.body;
+      const payload = req.body;
 
-      return res.send(await keysets.rename(keyset, newName));
+      if (payload.name !== keyset) {
+        await keysets.rename(keyset, payload.name);
+      }
+
+      const result = await keysets.update(payload);
+
+      return res.send(result);
     }
   );
 
@@ -54,8 +58,9 @@ export const keysetsController = ({
   router.get(
     `/${path}/:keyset`,
     async (req: Request<{ keyset: string }>, res) => {
-      const result = await keysets.getValue(req.params.keyset);
-      return res.send(result);
+      const keyset = await keysets.getKeyset(req.params.keyset);
+
+      return res.send(keyset.getData());
     }
   );
 
@@ -66,9 +71,11 @@ export const keysetsController = ({
       req: Request<{ keyset: string; key: string }, {}, KeyPayload>,
       res
     ) => {
-      const keyset = new Keyset(await keysets.getValue(req.params.keyset));
-      const result = keyset.createKey(req.body);
-      await keysets.update(req.params.keyset, result);
+      const keyset = await keysets.getKeyset(req.params.keyset);
+      const result = await keysets.updateKeyset(
+        req.params.keyset,
+        keyset.createKey(req.body)
+      );
 
       return res.send(result);
     }
@@ -81,9 +88,20 @@ export const keysetsController = ({
       req: Request<{ keyset: string; key: string }, {}, KeyPayload>,
       res
     ) => {
-      const keyset = new Keyset(await keysets.getValue(req.params.keyset));
-      const result = keyset.updateKey(req.params.key, req.body);
-      await keysets.update(req.params.keyset, result);
+      const keyset = await keysets.getKeyset(req.params.keyset);
+
+      // rename key
+      if (req.params.key !== req.body.name) {
+        keyset.createKey(req.body);
+        keyset.deleteKey(req.params.key);
+      } else {
+        keyset.updateKey(req.body);
+      }
+
+      const result = await keysets.updateKeyset(
+        req.params.keyset,
+        keyset.getData()
+      );
 
       return res.send(result);
     }
@@ -93,9 +111,11 @@ export const keysetsController = ({
   router.delete(
     `/${path}/:keyset/:key`,
     async (req: Request<{ keyset: string; key: string }>, res) => {
-      const keyset = new Keyset(await keysets.getValue(req.params.keyset));
-      const result = keyset.deleteKey(req.params.key);
-      await keysets.update(req.params.keyset, result);
+      const keyset = await keysets.getKeyset(req.params.keyset);
+      const result = await keysets.updateKeyset(
+        req.params.keyset,
+        keyset.deleteKey(req.params.key)
+      );
 
       return res.send(result);
     }

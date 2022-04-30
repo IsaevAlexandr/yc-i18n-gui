@@ -1,3 +1,4 @@
+import { Keyset } from "server/models/Keyset";
 import { AllowedStatuses } from "shared/constants";
 
 export enum Lang {
@@ -33,24 +34,21 @@ export type LangPayload = {
   allowedStatus: AllowedStatuses;
 };
 
+export type KeysetPayload = {
+  context: string;
+  name: string;
+};
 export type KeyPayload = Record<Lang, LangPayload> & {
   context: string;
   name: string;
 };
 
-// TODO: скорее всего стоит вынести в DTO
-export type RenamePayload = { oldName: string; newName: string };
-
-export type DeleteKeyDTO = {
-  name: string;
-};
-
 export interface KeysetsService {
   list: string[];
-  // TODO: ability to add context on creation
-  create(name: string): Promise<KeysetType>;
+  create(name: string, p?: KeysetType): Promise<KeysetType>;
   rename(name: string, newName: string): Promise<string>;
   delete(name: string): Promise<string>;
-  update(name: string, p: KeysetType): Promise<KeysetType>;
-  getValue(name: string): Promise<KeysetType>;
+  update(p: KeysetPayload): Promise<KeysetType>;
+  updateKeyset(name: string, p: KeysetType): Promise<KeysetType>;
+  getKeyset(name: string): Promise<Keyset>;
 }

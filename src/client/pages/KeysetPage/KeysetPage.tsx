@@ -6,7 +6,6 @@ import { KeysetTable } from "./components/KeysetTable/KeysetTable";
 import { useKeysetPage } from "./useKeysetPage";
 
 const KeysetPage = () => {
-  const [showNewKeyComponent, setShowNewKeyComponent] = React.useState(false);
   const {
     history,
     selectedKeyset,
@@ -21,9 +20,10 @@ const KeysetPage = () => {
 
   return (
     <Page padding>
-      <Stack direction="row" sx={{ mb: 2 }} spacing={2} alignItems="flex-end">
+      <Stack direction="row" sx={{ mb: 2 }} spacing={2}>
         <KeysetAutocomplete
           value={selectedKeyset}
+          onReset={() => history.push("/")}
           onUpdate={(value, isNew) => {
             if (isNew) {
               createKeyset(value);
@@ -37,17 +37,6 @@ const KeysetPage = () => {
           }))}
         />
 
-        <Button
-          size="medium"
-          variant="contained"
-          color="primary"
-          onClick={() => {
-            setShowNewKeyComponent(true);
-          }}
-        >
-          + add new key
-        </Button>
-
         {selectedKeyset && (
           <Button
             size="medium"
@@ -60,14 +49,15 @@ const KeysetPage = () => {
         )}
       </Stack>
 
-      <KeysetTable
-        data={keyset}
-        addKey={showNewKeyComponent}
-        onCreateRow={createKey}
-        onDeleteRow={deleteKey}
-        onEditRow={editKey}
-        toggleAddKey={setShowNewKeyComponent}
-      />
+      {selectedKeyset && (
+        <KeysetTable
+          data={keyset?.data || []}
+          allowedStatuses={keyset?.allowedStatuses}
+          onCreateRow={createKey}
+          onDeleteRow={deleteKey}
+          onEditRow={editKey}
+        />
+      )}
     </Page>
   );
 };

@@ -1,6 +1,6 @@
 declare namespace NodeJS {
   interface ProcessEnv {
-    KEYSETS_ROOT_DOR: string;
+    KEYSETS_DIR_PATH: string;
     NODE_ENV: "development" | "production";
     PORT?: string;
   }

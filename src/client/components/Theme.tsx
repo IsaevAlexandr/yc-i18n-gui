@@ -4,11 +4,6 @@ export const Theme = responsiveFontSizes(
   createTheme({
     components: {
       MuiTextField: {
-        styleOverrides: {
-          root: {
-            borderRadius: 0,
-          },
-        },
         defaultProps: {
           size: "small",
         },
@@ -16,7 +11,6 @@ export const Theme = responsiveFontSizes(
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
             whiteSpace: "nowrap",
           },
         },

@@ -3,8 +3,15 @@ import { promisify } from "util";
 import path from "path";
 import rimraf from "rimraf";
 import { DEFAULT_KEYSET } from "shared/constants";
-import { KeysetType, Lang, LangFiles, KeysetsService } from "shared/types";
+import {
+  KeysetType,
+  Lang,
+  LangFiles,
+  KeysetsService,
+  KeysetPayload,
+} from "shared/types";
 import { ValidationError } from "server/errors/ValidationError";
+import { Keyset } from "./Keyset";
 
 const writeFilePromise = promisify(fs.writeFile);
 const readFilePromise = promisify(fs.readFile);
@@ -23,10 +30,8 @@ export class KeysetsFs implements KeysetsService {
     this._dirNames = fs.readdirSync(this._rootDir);
   };
 
-  create = async (name: string) => {
-    const res = await this.update(name, DEFAULT_KEYSET);
-
-    await this._syncDirNames();
+  create = async (name: string, payload: KeysetType = DEFAULT_KEYSET) => {
+    const res = await this.updateKeyset(name, payload);
 
     return res;
   };
@@ -49,6 +54,16 @@ export class KeysetsFs implements KeysetsService {
     return res;
   };
 
+  async update({ name, context }: KeysetPayload): Promise<KeysetType> {
+    const keyset = (await this.getKeyset(name)).getData();
+
+    keyset.keyset.context = context;
+
+    const result = await this.updateKeyset(name, keyset);
+
+    return result;
+  }
+
   delete = async (name: string): Promise<string> => {
     const res = await new Promise<string>((res, rej) =>
       rimraf(path.resolve(this._rootDir, name), (err) => {
@@ -62,8 +77,7 @@ export class KeysetsFs implements KeysetsService {
     return res;
   };
 
-  // TODO: cache keyset than read (LCU)
-  getValue = async (name: string): Promise<KeysetType> => {
+  getKeyset = async (name: string): Promise<Keyset> => {
     const dir = path.resolve(this._rootDir, name);
 
     if (!fs.existsSync(dir)) {
@@ -87,17 +101,20 @@ export class KeysetsFs implements KeysetsService {
       ),
     ]);
 
-    return {
+    return new Keyset({
       context,
       keyset,
       ...lang.reduce<LangFiles>((acc, [lang, langVal]) => {
         acc[lang] = langVal;
         return acc;
       }, {} as LangFiles),
-    };
+    });
   };
 
-  update = async (name: string, payload: KeysetType): Promise<KeysetType> => {
+  updateKeyset = async (
+    name: string,
+    payload: KeysetType
+  ): Promise<KeysetType> => {
     const dir = path.resolve(this._rootDir, name);
 
     if (!fs.existsSync(dir)) {

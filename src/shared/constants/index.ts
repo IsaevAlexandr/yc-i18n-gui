@@ -18,6 +18,8 @@ export const allowedStatuses = [
 
 export const KEYSETS_PATH = "keysets";
 
+export const DEFAULT_KEYSETS_DIR_PATH = "src/i18n-keysets";
+
 export const DEFAULT_KEYSET_KEY_PAYLOAD: KeyPayload = {
   context: "",
   name: "",
