@@ -1,6 +1,6 @@
 {
   "name": "yc-i18n-gui",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "license": "MIT",
   "bin": {
     "yc-i18n-gui": "bin/start.js"
@@ -10,7 +10,6 @@
     "email": "isaevalexandr188@gmail.com",
     "url": "https://github.com/IsaevAlexandr"
   },
-  
   "scripts": {
     "start:tsc": "tsc -b -w --preserveWatchOutput",
     "start": "concurrently \"yarn start:tsc\" \"razzle start\"",
