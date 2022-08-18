@@ -1,11 +1,32 @@
 import React from "react";
-import { TextField, TextFieldProps } from "@mui/material";
+import { TextField, TextFieldProps, IconButton } from "@mui/material";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useField } from "react-final-form";
 
-export const TextInputField: React.FC<TextFieldProps & { name: string }> = ({
+export type TextInputFieldProps = TextFieldProps & {
+  name: string;
+  withCopyButton?: boolean;
+}
+
+export const TextInputField: React.FC<TextInputFieldProps> = ({
   name,
+  withCopyButton,
   ...props
 }) => {
   const { input } = useField(name);
-  return <TextField {...input} {...props} />;
+  const handleCopyButtonClick = React.useCallback<React.MouseEventHandler<HTMLButtonElement>>(async (e) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(input.value);
+  }, []);
+
+  return (
+      <TextField
+        {...input}
+        {...props}
+        InputProps={{
+          endAdornment: withCopyButton
+              ? <IconButton onClick={handleCopyButtonClick}><ContentCopyIcon /></IconButton>
+              : null
+        }}
+      />);
 };
