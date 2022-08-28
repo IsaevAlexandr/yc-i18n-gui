@@ -8,7 +8,6 @@ export const errorHandler =
     if (err instanceof CustomError) {
       res.status(err.statusCode).send({ message: err.serializeError() });
     } else {
-      // TODO: we can better
       res.status(400).send({ message: String(err) });
     }
     next();

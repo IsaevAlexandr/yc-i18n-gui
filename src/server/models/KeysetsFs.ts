@@ -1,20 +1,15 @@
 import fs from "fs";
-import { promisify } from "util";
 import path from "path";
 import rimraf from "rimraf";
 import { DEFAULT_KEYSET } from "shared/constants";
 import {
-  KeysetType,
-  Lang,
-  LangFiles,
+  KeysetValue,
   KeysetsService,
   KeysetPayload,
+  KeyPayload,
 } from "shared/types";
-import { ValidationError } from "server/errors/ValidationError";
-import { Keyset } from "./Keyset";
 
-const writeFilePromise = promisify(fs.writeFile);
-const readFilePromise = promisify(fs.readFile);
+import { Keyset } from "./Keyset";
 
 export class KeysetsFs implements KeysetsService {
   private _dirNames: string[];
@@ -30,10 +25,38 @@ export class KeysetsFs implements KeysetsService {
     this._dirNames = fs.readdirSync(this._rootDir);
   };
 
-  create = async (name: string, payload: KeysetType = DEFAULT_KEYSET) => {
+  create = async (name: string, payload: KeysetValue = DEFAULT_KEYSET) => {
     const res = await this.updateKeyset(name, payload);
 
     return res;
+  };
+
+  deleteKey = async (name: string, key: string): Promise<boolean> => {
+    new Keyset(this._pathToKeyset(name)).deleteKey(key);
+
+    return true;
+  };
+
+  createKey = async (
+    name: string,
+    payload: KeyPayload
+  ): Promise<KeysetValue> => {
+    return new Keyset(this._pathToKeyset(name)).createKey(payload);
+  };
+
+  async updateKey(
+    name: string,
+    key: string,
+    payload: KeyPayload
+  ): Promise<KeysetValue> {
+    return new Keyset(this._pathToKeyset(name)).updateKey({
+      ...payload,
+      name: key,
+    });
+  }
+
+  getKeysetValue = async (name: string): Promise<KeysetValue> => {
+    return new Keyset(this._pathToKeyset(name)).value;
   };
 
   rename = async (name: string, newName: string): Promise<string> => {
@@ -54,15 +77,13 @@ export class KeysetsFs implements KeysetsService {
     return res;
   };
 
-  async update({ name, context }: KeysetPayload): Promise<KeysetType> {
-    const keyset = (await this.getKeyset(name)).getData();
+  update = async ({ name, context }: KeysetPayload): Promise<KeysetValue> => {
+    const keyset = new Keyset(this._pathToKeyset(name));
 
-    keyset.keyset.context = context;
+    keyset.update({ context });
 
-    const result = await this.updateKeyset(name, keyset);
-
-    return result;
-  }
+    return keyset.value;
+  };
 
   delete = async (name: string): Promise<string> => {
     const res = await new Promise<string>((res, rej) =>
@@ -77,72 +98,18 @@ export class KeysetsFs implements KeysetsService {
     return res;
   };
 
-  getKeyset = async (name: string): Promise<Keyset> => {
-    const dir = path.resolve(this._rootDir, name);
-
-    if (!fs.existsSync(dir)) {
-      throw new ValidationError(`Directory: '${name}' does not exists`);
-    }
-
-    const [context, keyset, ...lang] = await Promise.all([
-      readFilePromise(path.join(dir, "context.json")).then((s) =>
-        JSON.parse(String(s))
-      ),
-      readFilePromise(path.join(dir, "keyset.json")).then((s) =>
-        JSON.parse(String(s))
-      ),
-      ...Object.keys(Lang).map(
-        (lang) =>
-          new Promise((res) => {
-            readFilePromise(path.join(dir, `${lang}.json`)).then((s) =>
-              res([lang, JSON.parse(String(s))])
-            );
-          })
-      ),
-    ]);
-
-    return new Keyset({
-      context,
-      keyset,
-      ...lang.reduce<LangFiles>((acc, [lang, langVal]) => {
-        acc[lang] = langVal;
-        return acc;
-      }, {} as LangFiles),
-    });
+  getKeyset = async (name: string): Promise<KeysetValue> => {
+    return new Keyset(this._pathToKeyset(name)).value;
   };
 
   updateKeyset = async (
     name: string,
-    payload: KeysetType
-  ): Promise<KeysetType> => {
-    const dir = path.resolve(this._rootDir, name);
-
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    await Promise.all([
-      writeFilePromise(
-        path.join(dir, "context.json"),
-        this.serializeJson(payload.context)
-      ),
-      writeFilePromise(
-        path.join(dir, "keyset.json"),
-        this.serializeJson(payload.keyset)
-      ),
-      Object.keys(Lang).map((lang) =>
-        writeFilePromise(
-          path.join(dir, `${lang}.json`),
-          this.serializeJson(payload[lang] || {})
-        )
-      ),
-    ]);
-
-    await this._syncDirNames();
-
-    return payload;
+    payload: KeysetValue
+  ): Promise<KeysetValue> => {
+    return new Keyset(this._pathToKeyset(name), payload).value;
   };
 
-  private serializeJson = (data: unknown): string =>
-    JSON.stringify(data, null, 4);
+  private _pathToKeyset = (name: string): string => {
+    return path.resolve(this._rootDir, name);
+  };
 }

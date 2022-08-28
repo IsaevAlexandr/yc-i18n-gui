@@ -24,7 +24,7 @@ export interface LangFile {
 
 export type LangFiles = Record<Lang, LangFile>;
 
-export type KeysetType = Record<Lang, LangFile> & {
+export type KeysetValue = LangFiles & {
   context: ContextFile;
   keyset: KeysetFile;
 };
@@ -45,10 +45,26 @@ export type KeyPayload = Record<Lang, LangPayload> & {
 
 export interface KeysetsService {
   list: string[];
-  create(name: string, p?: KeysetType): Promise<KeysetType>;
+  create(name: string, p?: KeysetValue): Promise<KeysetValue>;
   rename(name: string, newName: string): Promise<string>;
   delete(name: string): Promise<string>;
-  update(p: KeysetPayload): Promise<KeysetType>;
-  updateKeyset(name: string, p: KeysetType): Promise<KeysetType>;
-  getKeyset(name: string): Promise<Keyset>;
+  update(p: KeysetPayload): Promise<KeysetValue>;
+  getKeysetValue(name: string): Promise<KeysetValue>;
+  updateKeyset(name: string, payload: KeysetValue): Promise<KeysetValue>;
+  createKey(name: string, payload: KeyPayload): Promise<KeysetValue>;
+  updateKey(
+    name: string,
+    key: string,
+    payload: KeyPayload
+  ): Promise<KeysetValue>;
+  deleteKey(name: string, key: string): Promise<boolean>;
+}
+
+export interface KeysetBase {
+  value: KeysetValue;
+  update({ context: string }): KeysetValue;
+  updateKey(payload: KeyPayload): KeysetValue;
+  updateKeys(payload: KeyPayload[]): KeysetValue;
+  createKey(payload: KeyPayload): KeysetValue;
+  deleteKey(payload: string): KeysetValue;
 }

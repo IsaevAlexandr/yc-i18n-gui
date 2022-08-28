@@ -1,23 +1,23 @@
 import { KEYSETS_PATH } from "shared/constants";
-import { KeyPayload, KeysetType } from "shared/types";
+import { KeyPayload, KeysetValue } from "shared/types";
 import { handleRequest } from "./utils";
 
 export const getKeysetsList = (): Promise<string[]> => {
   return handleRequest(fetch(`/api/${KEYSETS_PATH}`, { method: "GET" }));
 };
 
-export const getKeyset = (name: string): Promise<KeysetType> => {
+export const getKeyset = (name: string): Promise<KeysetValue> => {
   return handleRequest(
     fetch(`/api/${KEYSETS_PATH}/${name}`, { method: "GET" })
   );
 };
 
-export const createKeyset = (name: string): Promise<KeysetType> => {
+export const createKeyset = (name: string): Promise<KeysetValue> => {
   return handleRequest(
     fetch(`/api/${KEYSETS_PATH}/${name}`, { method: "POST" })
   );
 };
-export const deleteKeyset = (name: string): Promise<KeysetType> => {
+export const deleteKeyset = (name: string): Promise<KeysetValue> => {
   return handleRequest(
     fetch(`/api/${KEYSETS_PATH}/${name}`, { method: "DELETE" })
   );
@@ -30,7 +30,7 @@ export interface KeyEditPayload {
 
 export const editKey =
   (keyset: string) =>
-  ({ name, keyData }: KeyEditPayload): Promise<KeysetType> => {
+  ({ name, keyData }: KeyEditPayload): Promise<KeysetValue> => {
     return handleRequest(
       fetch(`/api/${KEYSETS_PATH}/${keyset}/${name}`, {
         method: "PUT",
@@ -44,7 +44,7 @@ export const editKey =
 
 export const deleteKey =
   (keyset: string) =>
-  (payload: { name: string }): Promise<KeysetType> => {
+  (payload: { name: string }): Promise<KeysetValue> => {
     return handleRequest(
       fetch(`/api/${KEYSETS_PATH}/${keyset}/${payload.name}`, {
         method: "DELETE",
@@ -54,7 +54,7 @@ export const deleteKey =
 
 export const createKey =
   (keyset: string) =>
-  (payload: KeyPayload): Promise<KeysetType> => {
+  (payload: KeyPayload): Promise<KeysetValue> => {
     return handleRequest(
       fetch(`/api/${KEYSETS_PATH}/${keyset}/${payload.name}`, {
         method: "POST",

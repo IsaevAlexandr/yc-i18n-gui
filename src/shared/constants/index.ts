@@ -1,4 +1,10 @@
-import { KeyPayload, KeysetType, Lang, LangFiles, LangPayload } from "../types";
+import {
+  KeyPayload,
+  KeysetValue,
+  Lang,
+  LangFiles,
+  LangPayload,
+} from "../types";
 
 export enum AllowedStatuses {
   APPROVED = "APPROVED",
@@ -33,7 +39,7 @@ export const DEFAULT_KEYSET_KEY_PAYLOAD: KeyPayload = {
   }, {} as Record<Lang, LangPayload>),
 };
 
-export const DEFAULT_KEYSET: KeysetType = {
+export const DEFAULT_KEYSET: KeysetValue = {
   context: {},
   keyset: {
     context: "",

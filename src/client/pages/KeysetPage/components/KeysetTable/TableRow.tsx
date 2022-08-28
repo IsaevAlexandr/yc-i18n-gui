@@ -93,7 +93,7 @@ export const TableRow: React.FC<TableRowProps> = ({
                   autoComplete="off"
                   name="name"
                   disabled={!active}
-                  withCopyButton
+                  withCopyButton={active}
                 />
               </td>
 

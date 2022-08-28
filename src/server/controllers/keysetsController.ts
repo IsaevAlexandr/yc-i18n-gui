@@ -23,7 +23,7 @@ export const keysetsController = ({
     async (req: Request<{ keyset: string }>, res) => {
       const { keyset } = req.params;
 
-      res.send(await keysets.create(keyset));
+      return res.send(await keysets.create(keyset));
     }
   );
 
@@ -58,9 +58,7 @@ export const keysetsController = ({
   router.get(
     `/${path}/:keyset`,
     async (req: Request<{ keyset: string }>, res) => {
-      const keyset = await keysets.getKeyset(req.params.keyset);
-
-      return res.send(keyset.getData());
+      return res.send(await keysets.getKeysetValue(req.params.keyset));
     }
   );
 
@@ -71,13 +69,9 @@ export const keysetsController = ({
       req: Request<{ keyset: string; key: string }, {}, KeyPayload>,
       res
     ) => {
-      const keyset = await keysets.getKeyset(req.params.keyset);
-      const result = await keysets.updateKeyset(
-        req.params.keyset,
-        keyset.createKey(req.body)
-      );
+      const keyset = await keysets.createKey(req.params.keyset, req.body);
 
-      return res.send(result);
+      return res.send(keyset);
     }
   );
 
@@ -88,22 +82,20 @@ export const keysetsController = ({
       req: Request<{ keyset: string; key: string }, {}, KeyPayload>,
       res
     ) => {
-      const keyset = await keysets.getKeyset(req.params.keyset);
-
+      const {
+        params: { keyset, key },
+        body,
+      } = req;
+      let data;
       // rename key
       if (req.params.key !== req.body.name) {
-        keyset.createKey(req.body);
-        keyset.deleteKey(req.params.key);
+        data = keysets.createKey(keyset, body);
+        keysets.deleteKey(keyset, key);
       } else {
-        keyset.updateKey(req.body);
+        data = keysets.updateKey(keyset, key, body);
       }
 
-      const result = await keysets.updateKeyset(
-        req.params.keyset,
-        keyset.getData()
-      );
-
-      return res.send(result);
+      return res.send(data);
     }
   );
 
@@ -111,13 +103,11 @@ export const keysetsController = ({
   router.delete(
     `/${path}/:keyset/:key`,
     async (req: Request<{ keyset: string; key: string }>, res) => {
-      const keyset = await keysets.getKeyset(req.params.keyset);
-      const result = await keysets.updateKeyset(
-        req.params.keyset,
-        keyset.deleteKey(req.params.key)
-      );
+      const {
+        params: { keyset, key },
+      } = req;
 
-      return res.send(result);
+      return res.send(await keysets.deleteKey(keyset, key));
     }
   );
 

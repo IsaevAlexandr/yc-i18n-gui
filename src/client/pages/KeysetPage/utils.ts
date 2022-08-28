@@ -1,11 +1,10 @@
-import { KeysetType, KeyPayload, LangPayload, Lang } from "shared/types";
+import { KeysetValue, KeyPayload, LangPayload, Lang } from "shared/types";
 
 export const adapter = ({
   context,
   keyset,
   ...langs
-}: KeysetType): KeyPayload[] => {
-  
+}: KeysetValue): KeyPayload[] => {
   return Object.entries(keyset.status).map(([key, langStatuses]) => {
     return {
       name: key,
